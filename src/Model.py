@@ -2,6 +2,53 @@ import torch
 import torch.nn as nn
 
 
+# PointNet classification network
+class PointNetCls(nn.Module):
+    def __init__(self, n_classes, bn, do):
+        super(PointNetCls, self).__init__()
+
+        self.n_classes = n_classes  # n_classes: number of classes for the classification task
+        self.bn = bn  # bn = True <=> we use batch normalization
+        self.do = do  # do = True <=> we use dropout during training
+
+        self.local_feats_net = PointNetLocalFeatures(bn=bn)
+        self.global_feats_net = PointNetGlobalFeatures(bn=bn)
+
+        # Fully connected MLP((512, 256, n_classes) layers
+        self.mlp = nn.Sequential(
+            # Linear: (in_features, out_features)
+            # BatchNorm1d: (n_features)
+            # Note: We use LogSoftmax instead of Softmax for numerical properties and stability
+            # /!\ LogSoftmax makes us use the NLLLoss instead of the CrossEntropyLoss. (See pytorch doc)
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512) if bn else nn.Identity(),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.Dropout(p=0.3) if do else nn.Identity(),
+            nn.BatchNorm1d(256) if bn else nn.Identity(),
+            nn.ReLU(),
+            nn.Linear(256, n_classes),
+            nn.LogSoftmax(dim=1)
+        )
+
+    def forward(self, x):
+        # t_net_input_data: (batch_size, n_channels, n_points)
+        point_net_cls_input = x                                            # (batch_size, 3, n_points)
+
+        # Local features extractions
+        local_features = self.local_feats_net(point_net_cls_input)         # (batch_size, 64, n_points)
+
+        # Global features extractions (from local features)
+        global_features = self.global_feats_net(local_features)            # (batch_size, 1024)
+
+        # Fully connected MLP((512, 256, n_classes) layers
+        mlp_output = self.mlp(global_features)                             # (batch_size, n_classes)
+
+        point_net_cls_output = mlp_output                                  # (batch_size, n_classes)
+
+        return point_net_cls_output
+
+
 # Spatial Temporal Networks (STN) for the Input & Feature Transforms
 class TNet(nn.Module):
     def __init__(self, k, bn):
@@ -16,15 +63,12 @@ class TNet(nn.Module):
             # BatchNorm1d: (n_features)
             nn.Conv1d(k, 64, 1),
             nn.BatchNorm1d(64) if bn else nn.Identity(),
-            # nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Conv1d(64, 128, 1),
             nn.BatchNorm1d(128) if bn else nn.Identity(),
-            # nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Conv1d(128, 1024, 1),
             nn.BatchNorm1d(1024) if bn else nn.Identity(),
-            # nn.BatchNorm1d(1024),
             nn.ReLU(),
         )
 
@@ -64,8 +108,103 @@ class TNet(nn.Module):
         return transform_matrix
 
 
+# Local points Features extractor of PointNet
+class PointNetLocalFeatures(nn.Module):
+    def __init__(self, bn):
+        super(PointNetLocalFeatures, self).__init__()
+
+        self.bn = bn  # bn = True <=> we use batch normalization
+
+        self.t_net_3d = TNet(k=3, bn=bn)
+        self.t_net_64d = TNet(k=64, bn=bn)
+
+        # Shared MLP(64,64) layers
+        self.shared_mlp = nn.Sequential(
+            # Conv1d: (in_channels, out_channels, kernel_size)
+            # BatchNorm1d: (n_features)
+            nn.Conv1d(3, 64, 1),
+            nn.BatchNorm1d(64) if bn else nn.Identity(),
+            nn.ReLU(),
+            nn.Conv1d(64, 64, 1),
+            nn.BatchNorm1d(64) if bn else nn.Identity(),
+            nn.ReLU(),
+        )
+
+    def forward(self, x):
+        # local_feats_input: (batch_size, n_channels, n_points)
+        local_feats_input = x                                               # (batch_size, 3, n_points)
+
+        # Input transform
+        t_net_3d_matrix = self.t_net_3d(local_feats_input)                  # (batch_size, 3, 3)
+        input_transform = torch.matmul(t_net_3d_matrix, local_feats_input)  # (batch_size, 3, n_points)
+
+        # Shared MLP(64,64) layers
+        shared_mlp_output = self.shared_mlp(input_transform)                # (batch_size, 64, n_points)
+
+        # Feature transform
+        t_net_64d_matrix = self.t_net_64d(shared_mlp_output)                # (batch_size, 64, 64)
+        feat_transform = torch.matmul(t_net_64d_matrix, shared_mlp_output)  # (batch_size, 64, n_points)
+
+        local_features = feat_transform                                     # (batch_size, 64, n_points)
+        return local_features
+
+
+# Global points Features extractor of PointNet (from local features)
+class PointNetGlobalFeatures(nn.Module):
+    def __init__(self, bn):
+        super(PointNetGlobalFeatures, self).__init__()
+
+        self.bn = bn  # bn = True <=> we use batch normalization
+
+        # Shared MLP(64,128, 1024) layers
+        self.shared_mlp = nn.Sequential(
+            # Conv1d: (in_channels, out_channels, kernel_size)
+            # BatchNorm1d: (n_features)
+            nn.Conv1d(64, 64, 1),
+            nn.BatchNorm1d(64) if bn else nn.Identity(),
+            nn.ReLU(),
+            nn.Conv1d(64, 128, 1),
+            nn.BatchNorm1d(128) if bn else nn.Identity(),
+            nn.ReLU(),
+            nn.Conv1d(128, 1024, 1),
+            nn.BatchNorm1d(1024) if bn else nn.Identity(),
+            nn.ReLU(),
+        )
+
+    def forward(self, x):
+        # global_feats_input: (batch_size, n_channels, n_points)
+        global_feats_input = x                                              # (batch_size, 64, n_points)
+        batch_size, n_channels, n_points = global_feats_input.size()
+
+        # Shared MLP(64,128,1024) layers
+        shared_mlp_output = self.shared_mlp(global_feats_input)             # (batch_size, 64, n_points)
+
+        # Max Pooling
+        max_pooling = nn.MaxPool1d(n_points)(shared_mlp_output)             # (batch_size, 1024, 1)
+        max_pooling_flat = nn.Flatten(1)(max_pooling)                       # (batch_size, 1024)
+
+        global_features = max_pooling_flat                                  # (batch_size, 1024)
+        return global_features
+
+
 if __name__ == '__main__':
-    B, N, K = (32, 1000, 64)
-    input_data = torch.randn(B, K, N)
-    net = TNet(k=K, bn=True)
-    matrix = net(input_data)
+
+    # batch_s, num_channels, num_examples = (32, 64, 2048)
+    # input_data = torch.randn(batch_s, num_channels, num_examples)
+    # net = TNet(k=num_channels, bn=True)
+    # matrix = net(input_data)
+
+    # batch_s, num_channels, num_examples = (32, 3, 2048)
+    # input_data = torch.randn(batch_s, num_channels, num_examples)
+    # local_feats_net = PointNetLocalFeatures(bn=True)
+    # local_feats = local_feats_net(input_data)
+
+    # batch_s, num_channels, num_examples = (32, 64, 2048)
+    # input_data = torch.randn(batch_s, num_channels, num_examples)
+    # global_feats_net = PointNetGlobalFeatures(bn=True)
+    # global_feats = global_feats_net(input_data)
+
+    batch_s, num_channels, num_examples = (10, 3, 500)
+    input_data = torch.randn(batch_s, num_channels, num_examples)
+    point_net_cls = PointNetCls(n_classes=3, bn=True, do=True)
+    point_net_cls_pred = point_net_cls(input_data)
