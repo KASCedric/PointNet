@@ -2,21 +2,50 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-n_examples = 2
-n_channels = 3
 batch_size = 1
+n_channels = 3
+n_examples = 3
 
 # m = nn.Conv2d(1, 4, 1)  # (in_channels, out_channels, kernel_size)
 # input_data = torch.randn(1, 1, n_examples, n_channels)  # (batch_size, n_channels, height, width)
 # output_data = m(input_data)
 
-input_data = torch.randn(batch_size, n_channels, n_examples)  # (batch_size, n_channels, n_examples)
-matrix = torch.eye(n_channels).repeat(batch_size, 1, 1) * 2
-product = torch.matmul(matrix, input_data)
+x1 = torch.zeros(10, 10)
+x2 = x1.unsqueeze(2)
+# print(x2.size())
 
-print(input_data)
-print(matrix)
-print(product)
+input_data = torch.randn(batch_size, n_channels, n_examples)  # (batch_size, n_channels, n_examples)
+test = torch.randn(batch_size, 10)
+# print(test.size())
+test = test.unsqueeze(2)
+# print(test.size())
+sortie = test.repeat(1, 1, n_examples)
+# print(sortie.size())
+# print(
+#     sortie[0][0][0], "\n",
+#     sortie[0][1][0], "\n",
+#     sortie[0][2][0], "\n",
+# )
+# print(
+#     sortie[0][0][1], "\n",
+#     sortie[0][1][1], "\n",
+#     sortie[0][2][1], "\n",
+# )
+identity = torch.eye(3).repeat(batch_size, 1, 1)
+print(sortie.size())
+print(identity.size())
+
+tensor2 = torch.cat([identity, sortie], 1)
+print(sortie)
+print(identity)
+print(tensor2)
+
+
+# matrix = torch.eye(n_channels).repeat(batch_size, 1, 1) * 2
+# product = torch.matmul(matrix, input_data)
+# print(input_data)
+# print(matrix)
+# print(product)
 
 #
 # batch_size, n_channels, n_examples = input_data.size()
