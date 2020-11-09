@@ -2,6 +2,12 @@ import torch
 from torch.utils import data
 
 
+def dataloader(path_to_data):
+    # TODO: Wrap the fake dataloader to be able to finish the train loop
+    # TODO: Dataset class and dataloader function to handle it
+    return 0
+
+
 def fake_data_loader(task,
                      n_classes=5,
                      n_fake_data=256,
