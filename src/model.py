@@ -40,7 +40,8 @@ class PointNetSemSeg(nn.Module):
         batch_size, n_channels, n_points = point_net_sem_seg_input.size()
 
         # Local features extractions
-        local_features = self.local_feats_net(point_net_sem_seg_input)         # (batch_size, 64, n_points)
+        local_features, t_net_64d_matrix = \
+            self.local_feats_net(point_net_sem_seg_input)                      # (batch_size, 64, n_points)
 
         # Global features extractions (from local features)
         global_features = self.global_feats_net(local_features)                # (batch_size, 1024)
@@ -55,7 +56,7 @@ class PointNetSemSeg(nn.Module):
 
         point_net_sem_seg_output = mlp_output                                  # (batch_size, n_classes, n_points)
 
-        return point_net_sem_seg_output
+        return point_net_sem_seg_output, t_net_64d_matrix
 
 
 # PointNet classification network
@@ -92,7 +93,8 @@ class PointNetCls(nn.Module):
         point_net_cls_input = x                                            # (batch_size, 3, n_points)
 
         # Local features extractions
-        local_features = self.local_feats_net(point_net_cls_input)         # (batch_size, 64, n_points)
+        local_features, t_net_64d_matrix = \
+            self.local_feats_net(point_net_cls_input)                      # (batch_size, 64, n_points)
 
         # Global features extractions (from local features)
         global_features = self.global_feats_net(local_features)            # (batch_size, 1024)
@@ -102,7 +104,7 @@ class PointNetCls(nn.Module):
 
         point_net_cls_output = mlp_output                                  # (batch_size, n_classes)
 
-        return point_net_cls_output
+        return point_net_cls_output, t_net_64d_matrix
 
 
 # Spatial Temporal Networks (STN) for the Input & Feature Transforms
@@ -159,6 +161,8 @@ class TNet(nn.Module):
         # Note: As TNet outputs a transform matrix, the output is initialized with an identity matrix so that there is
         # no transform applied to the input point cloud at initialization
         identity = torch.eye(self.k).repeat(batch_size, 1, 1)
+        if mlp_output.is_cuda:
+            identity = identity.cuda()
         transform_matrix = mlp_output.view(-1, self.k, self.k) + identity  # (batch_size, k, k)
 
         return transform_matrix
@@ -192,17 +196,17 @@ class PointNetLocalFeatures(nn.Module):
 
         # Input transform
         t_net_3d_matrix = self.t_net_3d(local_feats_input)                  # (batch_size, 3, 3)
-        input_transform = torch.matmul(t_net_3d_matrix, local_feats_input)  # (batch_size, 3, n_points)
+        input_transform = torch.bmm(t_net_3d_matrix, local_feats_input)     # (batch_size, 3, n_points)
 
         # Shared MLP(64, 64) layers
         shared_mlp_output = self.shared_mlp(input_transform)                # (batch_size, 64, n_points)
 
         # Feature transform
         t_net_64d_matrix = self.t_net_64d(shared_mlp_output)                # (batch_size, 64, 64)
-        feat_transform = torch.matmul(t_net_64d_matrix, shared_mlp_output)  # (batch_size, 64, n_points)
+        feat_transform = torch.bmm(t_net_64d_matrix, shared_mlp_output)     # (batch_size, 64, n_points)
 
         local_features = feat_transform                                     # (batch_size, 64, n_points)
-        return local_features
+        return local_features, t_net_64d_matrix
 
 
 # Global points Features extractor of PointNet (from local features)
@@ -243,6 +247,15 @@ class PointNetGlobalFeatures(nn.Module):
         return global_features
 
 
+def compute_regularization(transform_matrix):
+    batch_size, dim, _ = transform_matrix.size()
+    identity = torch.eye(dim).repeat(batch_size, 1, 1)
+    if transform_matrix.is_cuda:
+        identity = identity.cuda()
+    matrix_square = torch.bmm(transform_matrix, transform_matrix.transpose(2, 1))
+    return torch.mean(torch.norm(matrix_square - identity))
+
+
 if __name__ == '__main__':
 
     batch_s, num_channels, num_points = (4, 64, 5)
@@ -254,7 +267,7 @@ if __name__ == '__main__':
     batch_s, num_channels, num_points = (4, 3, 5)
     input_data = torch.randn(batch_s, num_channels, num_points)
     local_feats_net = PointNetLocalFeatures(bn=True)
-    local_feats = local_feats_net(input_data)
+    local_feats, matrix_64d = local_feats_net(input_data)
     print("local_feats shape: ", local_feats.size())
 
     batch_s, num_channels, num_points = (4, 64, 5)
@@ -266,11 +279,13 @@ if __name__ == '__main__':
     batch_s, num_channels, num_points = (4, 3, 5)
     input_data = torch.randn(batch_s, num_channels, num_points)
     point_net_cls = PointNetCls(n_classes=10, bn=True, do=True)
-    point_net_cls_pred = point_net_cls(input_data)
+    point_net_cls_pred, matrix_64d_cls = point_net_cls(input_data)
     print("point_net_cls_pred shape: ", point_net_cls_pred.size())
+    print("matrix_64d_cls shape: ", matrix_64d_cls.size())
 
     batch_s, num_channels, num_points = (4, 3, 5)
     input_data = torch.randn(batch_s, num_channels, num_points)
     point_net_sem_seg = PointNetSemSeg(n_classes=10, bn=True)
-    point_net_sem_seg_pred = point_net_sem_seg(input_data)
+    point_net_sem_seg_pred, matrix_64d_semseg = point_net_sem_seg(input_data)
     print("point_net_sem_seg_pred shape: ", point_net_sem_seg_pred.size())
+    print("matrix_64d_semseg shape: ", matrix_64d_semseg.size())
