@@ -1,19 +1,22 @@
 import math
 from torch.utils.tensorboard import SummaryWriter
+import tqdm
 
+# TODO: tqdm
 
-# Write to tensorboard
-def dump_data():
-    for ind in range(10):
-        x = 2 * math.pi * ind
-        y = math.sin(x)
-        writer.add_scalar("Loss/train", y, ind)
-
-
-# default `log_dir` for tensorboard is "runs" - we'll be more specific here
-writer = SummaryWriter('runs/point_net_cls')
-dump_data()
-writer.flush()
+# # Write to tensorboard
+# def dump_data():
+#     for ind in range(10):
+#         x = 2 * math.pi * ind
+#         y = math.sin(x)
+#         writer.add_scalar("Loss/train", y, ind)
+#
+#
+# # default `log_dir` for tensorboard is "runs" - we'll be more specific here
+# writer = SummaryWriter('runs/point_net_cls')
+# dump_data()
+# writer.flush()
+#
 
 
 import torch
