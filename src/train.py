@@ -28,9 +28,19 @@ def train(config):
     n_classes = 5  # number of classes for the classification
     n_examples = 8192  # number of point clouds
     n_points_per_cloud = 1024  # number of points per point cloud
-    task = "cls"
+    task = "cls"  # Do classification (cls) or semantic segmentation (semseg)
+
+    # Number of prints to do during one epoch
+    # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
+    n_print = 10
 
     n_batches = int(n_examples / batch_size)  # number of batches
+
+    # Do a print each "print_freq" batch during one epoch.
+    if n_batches < n_print:
+        print_freq = 1
+    else:
+        print_freq = int(n_batches / n_print)
 
     # Dataloader
     train_loader = fake_data_loader(task=task,
@@ -82,8 +92,8 @@ def train(config):
 
             # print statistics
             running_loss += train_loss.item()
-            if i % 10 == 9:  # print every 10 mini-batches
-                running_loss /= 10  # current loss after iterating over 10 mini-batches
+            if i % print_freq == print_freq - 1:  # print every "print_freq" mini-batches
+                running_loss /= print_freq  # current loss after iterating over "print_freq" mini-batches
 
                 if dev_loader is not None:
                     # We evaluate the model on dev set
