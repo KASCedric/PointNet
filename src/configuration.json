@@ -1,20 +1,25 @@
 {
+    "train": {
+        "task": "cls",
+        "n_classes": 5,
+        "batch_size": 32,
+        "n_epoch": 60,
+        "lr": 0.001,
+        "reg_weight": 0.0001,
+        "models": "models/",
+        "data": "data/kitti"
+    },
+    "evaluate": {
+        "task": "semseg",
+        "model": "models/semseg/model-latest.npy",
+        "data": "data/kitti"
+    },
+    "inference": {
+        "task": "cls",
+        "model": "models/cls/model-latest.npy",
+        "data": "data/kitti/000000.ply"
+    },
+
     "n_points_per_cloud": 1024,
-    "n_examples": 8192,
-
-    "path_to_train_data": "data/train/",
-    "path_to_dev_data": "data/dev/",
-    "path_to_test_data": "data/test/",
-
-    "path_to_models": "models/",
-
-    "task": "cls",
-    "n_classes": 5,
-
-    "batch_size": 32,
-    "n_epoch": 60,
-
-    "lr": 0.001,
-    "reg_weight": 0.0001
-
+    "n_examples": 8192
 }
