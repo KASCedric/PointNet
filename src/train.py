@@ -14,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train(config):
-    # TODO: Create config.yml / json ? file and parse it
+    # TODO: Create config.json file and parse it
     # TODO: wrap the fake data loader
 
     # TODO: Save the model frequently
@@ -33,7 +33,7 @@ def train(config):
 
     # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
-    n_print = 10
+    n_print = 20
 
     n_batches = int(n_examples / batch_size)  # number of batches
 

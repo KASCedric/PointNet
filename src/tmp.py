@@ -1,3 +1,9 @@
+import json
+
+
+with open('configuration.json') as json_file:
+    data = json.load(json_file)
+
 # import math
 # from torch.utils.tensorboard import SummaryWriter
 # from tqdm import tqdm
