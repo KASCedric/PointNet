@@ -1,9 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 from src.dataset import fake_data_loader
 from src.model import PointNetCls, PointNetSemSeg, compute_regularization
+from src.utils import white, blue
 
 # Setting up a random generator seed so that the experiment can be replicated identically on any machine
 torch.manual_seed(29071997)
@@ -12,25 +14,24 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train(config):
-    # TODO: Pretty print training steps on terminal, model type, etc...
     # TODO: Create config.yml / json ? file and parse it
+    # TODO: wrap the fake data loader
 
-    # TODO: Plot the learning curves tensorboard
     # TODO: Save the model frequently
     # TODO: fire.Fire arg parsing
+    # TODO: Plot the learning curves tensorboard
 
     # Configuration & hyper parameters
     n_epoch = 2  # Number of epochs
     batch_size = 32  # Batch size
     lr = 0.001  # Learning rate
     reg_weight = 0.0001  # Regularization weight
-
     n_classes = 5  # number of classes for the classification
     n_examples = 8192  # number of point clouds
     n_points_per_cloud = 1024  # number of points per point cloud
     task = "cls"  # Do classification (cls) or semantic segmentation (semseg)
 
-    # Number of prints to do during one epoch
+    # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
     n_print = 10
 
@@ -50,10 +51,16 @@ def train(config):
                                     n_points_per_cloud=n_points_per_cloud)
     dev_loader = fake_data_loader(task=task,
                                   n_classes=n_classes,
-                                  n_fake_data=int(n_examples*0.1),
+                                  n_fake_data=int(n_examples * 0.1),
                                   batch_size=batch_size,
                                   n_points_per_cloud=n_points_per_cloud)
     dev_loader = None
+
+    network = "classification" if task == "cls" else "semantic segmentation"
+    before_training = "Training PointNet {} network. \n" \
+                      "The models will be saved each {} epoch(s) at the following dir: models/{}"\
+        .format(network, 0, task)
+    print(blue(before_training))
 
     if task == "cls":
         # Classification task
@@ -75,7 +82,19 @@ def train(config):
         running_loss = 0.0  # Used to monitor the training loss
         validation_loss = 0.0  # Used to monitor the validation loss
         accuracy = 0.0  # Used to monitor the accuracy
+
+        # Pretty print
+        # progress_bar = tqdm(train_loader, bar_format="%s{l_bar}{bar}{r_bar}%s" % (Fore.WHITE, Fore.RESET))
+        progress_bar = tqdm(train_loader, bar_format=white("{l_bar}{bar}{r_bar}"))
+        progress_bar.set_description('Epoch: {:d}/{:d} - train'.format(epoch + 1, n_epoch))
+        if dev_loader is None:
+            progress_bar.set_postfix(loss='N/A')
+        else:
+            progress_bar.set_postfix(train_loss='N/A', dev_loss='N/A', accuracy='N/A')
+
         for i, (train_inputs, train_labels) in enumerate(train_loader, 0):
+            progress_bar.update()
+
             train_inputs = train_inputs.to(device=device)
             train_labels = train_labels.to(device=device)
 
@@ -95,8 +114,8 @@ def train(config):
             if i % print_freq == print_freq - 1:  # print every "print_freq" mini-batches
                 running_loss /= print_freq  # current loss after iterating over "print_freq" mini-batches
 
+                # We evaluate the model on dev set to compute the validation_loss & the accuracy
                 if dev_loader is not None:
-                    # We evaluate the model on dev set
                     correct = 0
                     total = 0
                     with torch.no_grad():
@@ -108,18 +127,21 @@ def train(config):
                             validation_loss += dev_loss.item()
                             total += dev_labels.size(0) * (1 if task == "cls" else dev_labels.size(1))
                             dev_outputs = dev_outputs.data.max(1)[1]
-                            # correct += dev_outputs.eq(dev_labels, 0).sum().item()
-                            correct += (dev_outputs == dev_labels).sum()
+                            correct += dev_outputs.eq(dev_labels).sum()
                         validation_loss /= j
                         accuracy += 100 * correct / total
 
                     # We print the metrics (running_loss, validation_loss, accuracy)
-                    print('[Epoch: %d / %d, Batch: %d / %d] train loss: %.3f - dev loss: %.3f - accuracy: %.3f' %
-                          (epoch + 1, n_epoch, i + 1, n_batches, running_loss, validation_loss, accuracy))
+                    progress_bar.set_postfix(train_loss='{:.2f}'.format(running_loss),
+                                             dev_loss='{:.2f}'.format(validation_loss),
+                                             accuracy='{:.2f}'.format(accuracy))
+                    # print('[Epoch: %d / %d, Batch: %d / %d] train loss: %.3f - dev loss: %.3f - accuracy: %.3f' %
+                    #       (epoch + 1, n_epoch, i + 1, n_batches, running_loss, validation_loss, accuracy))
                 else:
                     # The dev set is not available, thus we only print the running_loss
-                    print('[Epoch: %d / %d, Batch: %d / %d] train loss: %.3f' %
-                          (epoch + 1, n_epoch, i + 1, n_batches, running_loss))
+                    progress_bar.set_postfix(loss='{:.2f}'.format(running_loss))
+                    # print('[Epoch: %d / %d, Batch: %d / %d] train loss: %.3f' %
+                    #       (epoch + 1, n_epoch, i + 1, n_batches, running_loss))
 
                 running_loss = 0.0
                 validation_loss = 0.0
@@ -127,7 +149,13 @@ def train(config):
 
         scheduler.step()
 
-    print('Finished Training')
+        progress_bar.refresh()
+        progress_bar.close()
+
+    after_training = "Finished Training ! \n" \
+                     "Next steps: evaluate your model using the command line: \n" \
+                     "python src/evaluate --path-to-test-data"
+    print(blue(after_training))
 
 
 if __name__ == "__main__":
