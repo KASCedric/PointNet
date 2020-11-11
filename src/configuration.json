@@ -4,6 +4,7 @@
         "n_classes": 5,
         "batch_size": 32,
         "n_epoch": 60,
+        "model_save_freq": 2,
         "models": "models/",
         "data": "data/kitti",
         "lr": 0.001,
@@ -11,12 +12,12 @@
     },
     "evaluate": {
         "task": "semseg",
-        "model": "models/semseg/model-latest.npy",
+        "model": "models/semseg-model-00001.pth",
         "data": "data/kitti"
     },
     "inference": {
         "task": "cls",
-        "model": "models/cls/model-latest.npy",
+        "model": "models/cls-model-000010.pth",
         "data": "data/kitti/000000.ply"
     }
 }

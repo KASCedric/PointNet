@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from src.dataset import dataloader
 from src.model import PointNetCls, PointNetSemSeg, compute_regularization
-from src.utils import white, blue
+from src.utils import white, blue, green, save_model
 
 # Setting up a random generator seed so that the experiment can be replicated identically on any machine
 torch.manual_seed(29071997)
@@ -15,8 +15,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train():
-    # TODO: Save the model frequently
-    # TODO: Plot the learning curves tensorboard
 
     with open("configuration.json") as json_file:
         config = json.load(json_file)["train"]
@@ -28,6 +26,7 @@ def train():
     reg_weight = config["reg_weight"]  # Regularization weight
     n_classes = config["n_classes"]  # number of classes for the classification
     task = config["task"]  # Do classification (cls) or semantic segmentation (semseg)
+    model_save_freq = config["model_save_freq"]  # Save the model each "model_save_freq" epoch(s).
 
     # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
@@ -43,7 +42,7 @@ def train():
     network = "classification" if task == "cls" else "semantic segmentation"
     before_training = "Training PointNet {} network. \n" \
                       "The models will be saved each {} epoch(s) at the following dir: models/{}"\
-        .format(network, 0, task)
+        .format(network, model_save_freq, task)
     print(blue(before_training))
 
     if task == "cls":
@@ -54,6 +53,7 @@ def train():
         net = PointNetSemSeg(n_classes=n_classes, bn=True).to(device=device)
     else:
         assert False, "Unknown task. Task should be 'cls' for classification or 'semseg' for semantic segmentation"
+    net.train()
 
     # Negative Log Likelihood Loss function used according to the LogSoftmax final layer activation in our networks
     criterion = nn.NLLLoss()
@@ -103,6 +103,7 @@ def train():
                     correct = 0
                     total = 0
                     with torch.no_grad():
+                        net.eval()
                         for j, (dev_inputs, dev_labels) in enumerate(dev_loader, 0):
                             dev_inputs = dev_inputs.to(device=device)
                             dev_labels = dev_labels.to(device=device)
@@ -114,6 +115,7 @@ def train():
                             correct += dev_outputs.eq(dev_labels).sum()
                         validation_loss /= j
                         accuracy += 100 * correct / total
+                    net.train()
 
                     # We print the metrics (running_loss, validation_loss, accuracy)
                     progress_bar.set_postfix(train_loss='{:.2f}'.format(running_loss),
@@ -135,6 +137,12 @@ def train():
 
         progress_bar.refresh()
         progress_bar.close()
+
+        if epoch % model_save_freq == model_save_freq - 1:
+            model_path = config["models"] + task + "-model-{:05d}.pth".format(epoch+1)
+            save_model(model=net, path=model_path)
+            after_saving = "Model successfully saved at: {}".format(model_path)
+            print(green(after_saving))
 
     after_training = "Finished Training ! \n" \
                      "Next steps: evaluate your model using the command line: \n" \
