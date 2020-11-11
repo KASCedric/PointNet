@@ -1,9 +1,10 @@
+import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 
-from src.dataset import fake_data_loader
+from src.dataset import dataloader
 from src.model import PointNetCls, PointNetSemSeg, compute_regularization
 from src.utils import white, blue
 
@@ -13,48 +14,33 @@ torch.manual_seed(29071997)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train(config):
-    # TODO: Create config.json file and parse it
+def train():
     # TODO: wrap the fake data loader
 
     # TODO: Save the model frequently
-    # TODO: fire.Fire arg parsing
     # TODO: Plot the learning curves tensorboard
 
+    with open("configuration.json") as json_file:
+        config = json.load(json_file)["train"]
+
     # Configuration & hyper parameters
-    n_epoch = 2  # Number of epochs
-    batch_size = 32  # Batch size
-    lr = 0.001  # Learning rate
-    reg_weight = 0.0001  # Regularization weight
-    n_classes = 5  # number of classes for the classification
-    n_examples = 8192  # number of point clouds
-    n_points_per_cloud = 1024  # number of points per point cloud
-    task = "cls"  # Do classification (cls) or semantic segmentation (semseg)
+    n_epoch = config["n_epoch"]  # Number of epochs
+    batch_size = config["batch_size"]  # Batch size
+    lr = config["lr"]  # Learning rate
+    reg_weight = config["reg_weight"]  # Regularization weight
+    n_classes = config["n_classes"]  # number of classes for the classification
+    task = config["task"]  # Do classification (cls) or semantic segmentation (semseg)
 
     # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
     n_print = 20
 
-    n_batches = int(n_examples / batch_size)  # number of batches
+    # Dataloader
+    train_loader, dev_loader, _ = dataloader(task=task, n_classes=n_classes, batch_size=batch_size)
+    n_batches = len(train_loader)  # number of batches
 
     # Do a print each "print_freq" batch during one epoch.
-    if n_batches < n_print:
-        print_freq = 1
-    else:
-        print_freq = int(n_batches / n_print)
-
-    # Dataloader
-    train_loader = fake_data_loader(task=task,
-                                    n_classes=n_classes,
-                                    n_fake_data=n_examples,
-                                    batch_size=batch_size,
-                                    n_points_per_cloud=n_points_per_cloud)
-    dev_loader = fake_data_loader(task=task,
-                                  n_classes=n_classes,
-                                  n_fake_data=int(n_examples * 0.1),
-                                  batch_size=batch_size,
-                                  n_points_per_cloud=n_points_per_cloud)
-    dev_loader = None
+    print_freq = int(n_batches / n_print) if n_batches >= n_print else 1
 
     network = "classification" if task == "cls" else "semantic segmentation"
     before_training = "Training PointNet {} network. \n" \
@@ -154,9 +140,9 @@ def train(config):
 
     after_training = "Finished Training ! \n" \
                      "Next steps: evaluate your model using the command line: \n" \
-                     "python src/evaluate --path-to-test-data"
+                     "python src/evaluate.py"
     print(blue(after_training))
 
 
 if __name__ == "__main__":
-    train("test")
+    train()

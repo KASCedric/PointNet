@@ -2,10 +2,32 @@ import torch
 from torch.utils import data
 
 
-def dataloader(path_to_data):
+def dataloader(task, n_classes, batch_size, path_to_data=None):
     # TODO: Wrap the fake dataloader to be able to finish the train loop
     # TODO: Dataset class and dataloader function to handle it
-    return 0
+
+    n_examples = 8192  # number of point clouds
+    n_points_per_cloud = 1024  # number of points per point cloud
+
+    train = fake_data_loader(task=task,
+                             n_classes=n_classes,
+                             n_fake_data=n_examples,
+                             batch_size=batch_size,
+                             n_points_per_cloud=n_points_per_cloud)
+
+    dev = fake_data_loader(task=task,
+                           n_classes=n_classes,
+                           n_fake_data=int(n_examples * 0.1),
+                           batch_size=batch_size,
+                           n_points_per_cloud=n_points_per_cloud)
+
+    test = fake_data_loader(task=task,
+                            n_classes=n_classes,
+                            n_fake_data=int(n_examples * 0.1),
+                            batch_size=batch_size,
+                            n_points_per_cloud=n_points_per_cloud)
+
+    return train, dev, test
 
 
 def fake_data_loader(task,
