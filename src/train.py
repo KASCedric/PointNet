@@ -15,8 +15,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def train():
-    # TODO: wrap the fake data loader
-
     # TODO: Save the model frequently
     # TODO: Plot the learning curves tensorboard
 
