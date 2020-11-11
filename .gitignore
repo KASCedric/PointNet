@@ -134,5 +134,6 @@ dmypy.json
 # Pycharm
 *.idea
 
-# Tensorboard
-*runs*
+# others
+*models*
+*data*

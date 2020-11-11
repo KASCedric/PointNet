@@ -27,6 +27,7 @@ def train():
     n_classes = config["n_classes"]  # number of classes for the classification
     task = config["task"]  # Do classification (cls) or semantic segmentation (semseg)
     model_save_freq = config["model_save_freq"]  # Save the model each "model_save_freq" epoch(s).
+    validate = config["validate"]  # If True we use dev data to validate the model while training
 
     # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
@@ -34,14 +35,17 @@ def train():
 
     # Dataloader
     train_loader, dev_loader, _ = dataloader(task=task, n_classes=n_classes, batch_size=batch_size)
+    if validate:
+        assert dev_loader is not None, "The dev loader should not be None if you want to validate the model"
+
     n_batches = len(train_loader)  # number of batches
 
     # Do a print each "print_freq" batch during one epoch.
     print_freq = int(n_batches / n_print) if n_batches >= n_print else 1
 
     network = "classification" if task == "cls" else "semantic segmentation"
-    before_training = "Training PointNet {} network. \n" \
-                      "The models will be saved each {} epoch(s) at the following dir: models/{}"\
+    before_training = "Training PointNet {} network, and using dev set for validation. " if validate \
+        else "Training PointNet {} network.\nThe models will be saved each {} epoch(s) at the following dir: models/{}"\
         .format(network, model_save_freq, task)
     print(blue(before_training))
 
@@ -99,7 +103,7 @@ def train():
                 running_loss /= print_freq  # current loss after iterating over "print_freq" mini-batches
 
                 # We evaluate the model on dev set to compute the validation_loss & the accuracy
-                if dev_loader is not None:
+                if validate:
                     correct = 0
                     total = 0
                     with torch.no_grad():

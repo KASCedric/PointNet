@@ -4,6 +4,7 @@
         "n_classes": 5,
         "batch_size": 32,
         "n_epoch": 60,
+        "validate": true,
         "model_save_freq": 2,
         "models": "models/",
         "data": "data/kitti",
