@@ -1,4 +1,7 @@
 import torch
+import numpy as np
+from pathlib import Path
+import json
 
 
 def white(x):
@@ -24,3 +27,65 @@ def load_model(model, path):
     model.load_state_dict(torch.load(path))
     model.eval()
     return model
+
+
+def get_input_file_dir(dataset_root, sequence, cloud):
+    path_to_sequence = Path("dataset/sequences") / sequence
+    pc_dir = dataset_root / "velodyne" / path_to_sequence / "velodyne" / cloud
+    label_dir = dataset_root / "labels" / path_to_sequence / "labels" / cloud
+    return pc_dir.with_suffix(".bin"), label_dir.with_suffix(".label")
+
+
+def rgb_from_label(label):
+    with open("semantic-kitti.json") as json_file:
+        color_map = json.load(json_file)["color_map"]
+
+    def wanted_func(label_):
+        b = color_map[str(label_)][0] / 256
+        g = color_map[str(label_)][1] / 256
+        r = color_map[str(label_)][2] / 256
+        return r, g, b
+    return np.vectorize(wanted_func)(label)
+
+
+def bin_to_ply(pc_dir, label_dir, file_out):
+    with open("semantic-kitti.json") as json_file:
+        color_map = json.load(json_file)["color_map"]
+
+    nodes = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+    labels = np.fromfile(label_dir, dtype=np.int32).reshape((-1))
+    labels = labels & 0xFFFF  # get lower half for semantics
+    labels = labels.reshape([-1, 1])
+    r, g, b = rgb_from_label(labels[:, 0])
+
+    len_nodes = len(nodes)
+
+    header = \
+        "ply\n" \
+        "format binary_little_endian 1.0\n" \
+        "element vertex "+str(len_nodes)+"\n" \
+        "property float x\n" \
+        "property float y\n" \
+        "property float z\n" \
+        "property float intensity\n" \
+        "property uint label\n" \
+        "property float red\n" \
+        "property float green\n" \
+        "property float blue\n" \
+        "end_header\n"
+
+    d_type_vertex = [('vertex', '<f4', 8)]
+    vertex = np.empty(len_nodes, dtype=d_type_vertex)
+    vertex['vertex'] = np.stack((nodes[:, 0],
+                                 nodes[:, 1],
+                                 nodes[:, 2],
+                                 nodes[:, 3],
+                                 labels[:, 0],
+                                 r[:],
+                                 g[:],
+                                 b[:]),
+                                axis=-1)
+
+    with open(file_out, 'wb') as fp:
+        fp.write(bytes(header.encode()))
+        fp.write(vertex.tostring())

@@ -1,10 +1,16 @@
 import torch
 from torch.utils import data
 
+# TODO: script to list in dataset.csv all data available
+# TODO: script to split dataset.csv into train dev and test sets
+# TODO: Functions to do data augmentation (rotation and jitter)
+# TODO: cpp script to down sample point clouds /!\ dont forget labels
+# TODO: bash script data preprocess new folder architecture & downsampled point clouds
+# TODO: Optional (in Dataset class)- Choose labels to keep and have the others in background
+# TODO: Dataset class and dataloader function to handle it
+
 
 def dataloader(task, n_classes, batch_size, path_to_data=None):
-    # TODO: Wrap the fake dataloader to be able to finish the train loop
-    # TODO: Dataset class and dataloader function to handle it
 
     n_examples = 8192  # number of point clouds
     n_points_per_cloud = 1024  # number of points per point cloud

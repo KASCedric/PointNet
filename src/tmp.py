@@ -1,8 +1,54 @@
 import json
 
+import numpy as np
+from pathlib import Path
 
-with open('configuration.json') as json_file:
-    data = json.load(json_file)
+from src.utils import bin_to_ply, get_input_file_dir, rgb_from_label
+
+dataset_root = Path("/media/cedric/Data/Documents/Datasets/kitti_velodyne/data")
+sequence = "00"
+point_cloud = "002586"
+file_out = Path("/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed") / point_cloud
+
+pc_dir, label_dir = get_input_file_dir(dataset_root, sequence, point_cloud)
+
+bin_to_ply(pc_dir, label_dir, file_out.with_suffix(".ply"))
+
+# label = np.fromfile(label_dir, dtype=np.int32).reshape((-1))
+# label = label & 0xFFFF       # get lower half for semantics
+# pc = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+#
+#
+# with open("config/semantic-kitti.json") as json_file:
+#     color_map = json.load(json_file)["color_map"]
+#
+# nodes = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+# labels = np.fromfile(label_dir, dtype=np.int32).reshape((-1))
+# labels = labels & 0xFFFF  # get lower half for semantics
+# labels = labels.reshape([-1, 1])
+# # r, g, b = rgb_from_label(labels[:, 0])
+# print(rgb_from_label(np.array([0, 1, 10])))
+# print(rgb_from_label(1))
+# print(rgb_from_label(10))
+
+# root = Path("/media/cedric/Data/Documents/Datasets/kitti/2011_09_26/2011_09_26_drive_0001_sync/velodyne_points/data/")
+# file_in = root / "0000000000.bin"
+# file_out = Path("./0000000000.ply")
+#
+# bin_to_ply(file_in, file_out)
+# pointcloud = np.fromfile(fileName, dtype=np.float32).reshape([-1, 4])
+
+# with open(fileName, "rb") as f:
+#     while byte := f.read(1):
+#         # Do stuff with byte.
+#         print(byte)
+#
+
+# with open(fileName, mode='rb') as file:  # b is important -> binary
+#     fileContent = file.read()
+
+# with open('configuration.json') as json_file:
+#     data = json.load(json_file)
 
 # import math
 # from torch.utils.tensorboard import SummaryWriter
