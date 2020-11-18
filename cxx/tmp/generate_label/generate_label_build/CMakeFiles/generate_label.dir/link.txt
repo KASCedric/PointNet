@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/generate_label.dir/main.cxx.o  -o generate_label 
