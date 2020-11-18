@@ -13,4 +13,4 @@ add_definitions(${PCL_DEFINITIONS})
 
 add_executable(${PROJECT_NAME} main.cxx)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC utils OpenMP::OpenMP_CXX  ${PCL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX  ${PCL_LIBRARIES})

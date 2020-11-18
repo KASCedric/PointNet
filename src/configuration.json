@@ -1,10 +1,10 @@
 {
     "train": {
-        "task": "cls",
-        "n_classes": 5,
-        "batch_size": 32,
+        "task": "semseg",
+        "n_classes": 34,
+        "batch_size": 1,
         "n_epoch": 60,
-        "validate": true,
+        "validate": false,
         "model_save_freq": 2,
         "models": "models/",
         "data": "data/kitti",

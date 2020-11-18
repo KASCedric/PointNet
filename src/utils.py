@@ -48,6 +48,16 @@ def rgb_from_label(label):
     return np.vectorize(wanted_func)(label)
 
 
+def true_label(label):
+    with open("semantic-kitti.json") as json_file:
+        labels_names = json.load(json_file)["labels"]
+
+    def wanted_func(label_):
+        return list(labels_names.keys()).index(str(label_))
+
+    return np.vectorize(wanted_func)(label)
+
+
 def bin_to_ply(pc_dir, label_dir, file_out):
     with open("semantic-kitti.json") as json_file:
         color_map = json.load(json_file)["color_map"]
@@ -89,3 +99,27 @@ def bin_to_ply(pc_dir, label_dir, file_out):
     with open(file_out, 'wb') as fp:
         fp.write(bytes(header.encode()))
         fp.write(vertex.tostring())
+
+
+if __name__ == "__main__":
+    data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne"
+    data_raw = "data"
+    sequence = 0
+
+    print(true_label([0, 11]))
+
+    # file = 0
+    # pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
+    # points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+    # print(points.shape)
+
+    # length = []
+    # for file in range(50):
+    #     pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
+    #     points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+    #     length.append(points.shape[0])
+    #
+    # print(length)
+
+    # with open("semantic-kitti.json") as json_file:
+    #     labels_names = json.load(json_file)["labels"]

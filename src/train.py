@@ -11,10 +11,11 @@ from src.utils import white, blue, green, save_model
 # Setting up a random generator seed so that the experiment can be replicated identically on any machine
 torch.manual_seed(29071997)
 # Setting the device used for the computations
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 
 
-def train():
+def train(bn=True):
 
     with open("configuration.json") as json_file:
         config = json.load(json_file)["train"]
@@ -34,7 +35,7 @@ def train():
     n_print = 20
 
     # Dataloader
-    train_loader, dev_loader, _ = dataloader(task=task, n_classes=n_classes, batch_size=batch_size)
+    train_loader, dev_loader, _ = dataloader()
     if validate:
         assert dev_loader is not None, "The dev loader should not be None if you want to validate the model"
 
@@ -44,17 +45,19 @@ def train():
     print_freq = int(n_batches / n_print) if n_batches >= n_print else 1
 
     network = "classification" if task == "cls" else "semantic segmentation"
-    before_training = "Training PointNet {} network, and using dev set for validation. " if validate \
-        else "Training PointNet {} network.\nThe models will be saved each {} epoch(s) at the following dir: models/{}"\
-        .format(network, model_save_freq, task)
+
+    before_training = "Training PointNet {} network, and using dev set for validation.".format(network) if validate \
+        else "Training PointNet {} network.".format(network)
+    before_training += "\nThe models will be saved each {} epoch(s) at the following dir: models/{}"\
+        .format(model_save_freq, task)
     print(blue(before_training))
 
     if task == "cls":
         # Classification task
-        net = PointNetCls(n_classes=n_classes, bn=True, do=True).to(device=device)
+        net = PointNetCls(n_classes=n_classes, bn=bn, do=True).to(device=device)
     elif task == "semseg":
         # Semantic segmentation task
-        net = PointNetSemSeg(n_classes=n_classes, bn=True).to(device=device)
+        net = PointNetSemSeg(n_classes=n_classes, bn=bn).to(device=device)
     else:
         assert False, "Unknown task. Task should be 'cls' for classification or 'semseg' for semantic segmentation"
     net.train()
@@ -72,7 +75,6 @@ def train():
         accuracy = 0.0  # Used to monitor the accuracy
 
         # Pretty print
-        # progress_bar = tqdm(train_loader, bar_format="%s{l_bar}{bar}{r_bar}%s" % (Fore.WHITE, Fore.RESET))
         progress_bar = tqdm(train_loader, bar_format=white("{l_bar}{bar}{r_bar}"))
         progress_bar.set_description('Epoch: {:d}/{:d} - train'.format(epoch + 1, n_epoch))
         if dev_loader is None:
@@ -155,4 +157,4 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    train(bn=False)

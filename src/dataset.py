@@ -1,5 +1,8 @@
 import torch
 from torch.utils import data
+from torch.utils.data.dataset import Dataset
+import os
+import numpy as np
 
 # TODO: script to list in dataset.csv all data available
 # TODO: script to split dataset.csv into train dev and test sets
@@ -8,32 +11,86 @@ from torch.utils import data
 # TODO: bash script data preprocess new folder architecture & downsampled point clouds
 # TODO: Optional (in Dataset class)- Choose labels to keep and have the others in background
 # TODO: Dataset class and dataloader function to handle it
+from src.utils import true_label
 
 
-def dataloader(task, n_classes, batch_size, path_to_data=None):
+class MyCustomDataset(Dataset):
+    def __init__(self):
+        super(MyCustomDataset, self).__init__()
+        self.data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne"
+        self.data_raw = "data"
+        self.sequence = 0
 
-    n_examples = 8192  # number of point clouds
-    n_points_per_cloud = 1024  # number of points per point cloud
+        root_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne" % (self.data_folder, self.data_raw, self.sequence)
+        self.count = len([name for name in os.listdir(root_dir) if os.path.isfile(root_dir + "/" + name)])
 
-    train = fake_data_loader(task=task,
-                             n_classes=n_classes,
-                             n_fake_data=n_examples,
-                             batch_size=batch_size,
-                             n_points_per_cloud=n_points_per_cloud)
+    def __getitem__(self, index):
+        points_dir = self.get_(index, features=True)
+        labels_dir = self.get_(index, features=False)
+        points = np.fromfile(points_dir, dtype=np.float32).reshape([-1, 4])
+        points = torch.from_numpy(points[:, :3].T).float()
+        labels = np.fromfile(labels_dir, dtype=np.int32).reshape((-1))
+        labels = labels & 0xFFFF  # get lower half for semantics
+        labels = torch.from_numpy(true_label(labels))
+        return points, labels
 
-    dev = fake_data_loader(task=task,
-                           n_classes=n_classes,
-                           n_fake_data=int(n_examples * 0.1),
-                           batch_size=batch_size,
-                           n_points_per_cloud=n_points_per_cloud)
+    def __len__(self):
+        return self.count
 
-    test = fake_data_loader(task=task,
-                            n_classes=n_classes,
-                            n_fake_data=int(n_examples * 0.1),
-                            batch_size=batch_size,
-                            n_points_per_cloud=n_points_per_cloud)
+    def get_(self, index, features):
+        if features:
+            output = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" \
+                     % (self.data_folder, self.data_raw, self.sequence, index)
+        else:
+            output = "%s/%s/labels/dataset/sequences/%02d/labels/%06d.label" \
+                     % (self.data_folder, self.data_raw, self.sequence, index)
+        return output
 
-    return train, dev, test
+
+def dataloader():
+
+    train = data.DataLoader(dataset=MyCustomDataset(), batch_size=1, shuffle=True)
+
+    return train, train, train
+
+# def dataloader(task, n_classes, batch_size, path_to_data=None):
+#
+#     n_examples = 8192  # number of point clouds
+#     n_points_per_cloud = 1024  # number of points per point cloud
+#
+#     train = data.DataLoader(dataset=MyCustomDataset, batch_size=1, shuffle=True)
+#
+#     # dev = fake_data_loader(task=task,
+#     #                        n_classes=n_classes,
+#     #                        n_fake_data=int(n_examples * 0.1),
+#     #                        batch_size=batch_size,
+#     #                        n_points_per_cloud=n_points_per_cloud)
+#     #
+#     # test = fake_data_loader(task=task,
+#     #                         n_classes=n_classes,
+#     #                         n_fake_data=int(n_examples * 0.1),
+#     #                         batch_size=batch_size,
+#     #                         n_points_per_cloud=n_points_per_cloud)
+#     #
+#     # train = fake_data_loader(task=task,
+#     #                          n_classes=n_classes,
+#     #                          n_fake_data=n_examples,
+#     #                          batch_size=batch_size,
+#     #                          n_points_per_cloud=n_points_per_cloud)
+#     #
+#     # dev = fake_data_loader(task=task,
+#     #                        n_classes=n_classes,
+#     #                        n_fake_data=int(n_examples * 0.1),
+#     #                        batch_size=batch_size,
+#     #                        n_points_per_cloud=n_points_per_cloud)
+#     #
+#     # test = fake_data_loader(task=task,
+#     #                         n_classes=n_classes,
+#     #                         n_fake_data=int(n_examples * 0.1),
+#     #                         batch_size=batch_size,
+#     #                         n_points_per_cloud=n_points_per_cloud)
+#
+#     return train, train, train
 
 
 def fake_data_loader(task,
@@ -66,7 +123,19 @@ def fake_data_loader(task,
 
 if __name__ == "__main__":
 
-    fake_loader = fake_data_loader(task="semseg")
-    for n, (inputs, labels) in enumerate(fake_loader, 0):
-        print(inputs.size())
-        print(labels.size())
+    train_loader, dev_loader, _ = dataloader()
+    train_inputs, train_labels = next(iter(train_loader))
+
+    print(train_inputs.size())
+    print(train_labels.size())
+
+    # fake_loader = fake_data_loader(task="semseg")
+    # for n, (inputs, labels) in enumerate(fake_loader, 0):
+    #     print(inputs.size())
+    #     print(labels.size())
+
+    # x1 = torch.randn(2, 3)
+    # x2 = torch.randn(2, 5)
+    # donnee = torch.stack((x1, x2), 0)
+    # print(donnee)
+
