@@ -137,3 +137,4 @@ dmypy.json
 # others
 *models*
 *data*
+cmake-build-debug
