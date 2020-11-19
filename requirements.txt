@@ -7,3 +7,4 @@ torchvision==0.8.1
 typing-extensions==3.7.4.3
 tensorboard==2.3.0
 tqdm==4.51.0
+plyfile==0.7.2

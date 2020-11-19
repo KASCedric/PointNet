@@ -19,6 +19,11 @@ def green(x):
     return '\033[92m' + str(x) + '\033[0m'
 
 
+def red(x):
+    #  Wrapper to print blue text in terminal
+    return '\033[91m' + str(x) + '\033[0m'
+
+
 def save_model(model, path):
     torch.save(model.state_dict(), path)
 
@@ -59,8 +64,6 @@ def true_label(label):
 
 
 def bin_to_ply(pc_dir, label_dir, file_out):
-    with open("semantic-kitti.json") as json_file:
-        color_map = json.load(json_file)["color_map"]
 
     nodes = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
     labels = np.fromfile(label_dir, dtype=np.int32).reshape((-1))
@@ -106,12 +109,29 @@ if __name__ == "__main__":
     data_raw = "data"
     sequence = 0
 
-    print(true_label([0, 11]))
+    # print(true_label([0, 11]))
 
-    # file = 0
-    # pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
-    # points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
-    # print(points.shape)
+    file = 0
+    pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
+    points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+    print(points[0, :])
+
+    pc_dir = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed/00/000000.ply"
+    from plyfile import PlyData
+    with open(pc_dir, 'rb') as f:
+        plydata = PlyData.read(f)
+        num_verts = plydata['vertex'].count
+        vertices = np.zeros(shape=[num_verts, 4], dtype=np.float32)
+        vertices[:,0] = plydata['vertex'].data['x']
+        vertices[:,1] = plydata['vertex'].data['y']
+        vertices[:,2] = plydata['vertex'].data['z']
+        vertices[:, 3] = plydata['vertex'].data['label']
+
+    print(vertices[20348, :])
+
+    # lbl_f = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/data/labels/dataset/sequences/00/labels/000000.label"
+    # lbl = np.fromfile(lbl_f, dtype=np.int32).reshape((-1))
+    # lbl2 = lbl & 0xFFFF  # get lower half for semantics
 
     # length = []
     # for file in range(50):

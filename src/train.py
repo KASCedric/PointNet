@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from src.dataset import dataloader
 from src.model import PointNetCls, PointNetSemSeg, compute_regularization
-from src.utils import white, blue, green, save_model
+from src.utils import white, blue, green, save_model, red
 
 # Setting up a random generator seed so that the experiment can be replicated identically on any machine
 torch.manual_seed(29071997)
@@ -32,7 +32,7 @@ def train(bn=True):
 
     # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
-    n_print = 20
+    n_print = 5000
 
     # Dataloader
     train_loader, dev_loader, _ = dataloader()
@@ -68,6 +68,7 @@ def train(bn=True):
     # Scheduler used to divide by 2 the learning rate each 20 epochs as said in PointNet paper
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 
+    running_loss_before = 0.0
     # Train loop
     for epoch in range(n_epoch):  # loop over the dataset multiple times
         running_loss = 0.0  # Used to monitor the training loss
@@ -131,10 +132,16 @@ def train(bn=True):
                     #       (epoch + 1, n_epoch, i + 1, n_batches, running_loss, validation_loss, accuracy))
                 else:
                     # The dev set is not available, thus we only print the running_loss
-                    progress_bar.set_postfix(loss='{:.2f}'.format(running_loss))
+                    if running_loss_before < running_loss:
+                        status = green("↗")
+                    else:
+                        status = red("↘")
+
+                    progress_bar.set_postfix(loss='{:.2f} {}'.format(running_loss, status))
                     # print('[Epoch: %d / %d, Batch: %d / %d] train loss: %.3f' %
                     #       (epoch + 1, n_epoch, i + 1, n_batches, running_loss))
 
+                running_loss_before = running_loss
                 running_loss = 0.0
                 validation_loss = 0.0
                 accuracy = 0.0
