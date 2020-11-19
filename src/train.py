@@ -11,8 +11,8 @@ from src.utils import white, blue, green, save_model, red
 # Setting up a random generator seed so that the experiment can be replicated identically on any machine
 torch.manual_seed(29071997)
 # Setting the device used for the computations
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
 
 
 def train(bn=True):

@@ -107,39 +107,39 @@ def bin_to_ply(pc_dir, label_dir, file_out):
 if __name__ == "__main__":
     data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne"
     data_raw = "data"
-    sequence = 0
+    sequence = 4
 
     # print(true_label([0, 11]))
 
-    file = 0
-    pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
-    points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
-    print(points[0, :])
-
-    pc_dir = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed/00/000000.ply"
-    from plyfile import PlyData
-    with open(pc_dir, 'rb') as f:
-        plydata = PlyData.read(f)
-        num_verts = plydata['vertex'].count
-        vertices = np.zeros(shape=[num_verts, 4], dtype=np.float32)
-        vertices[:,0] = plydata['vertex'].data['x']
-        vertices[:,1] = plydata['vertex'].data['y']
-        vertices[:,2] = plydata['vertex'].data['z']
-        vertices[:, 3] = plydata['vertex'].data['label']
-
-    print(vertices[20348, :])
+    # file = 0
+    # pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
+    # points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+    # print(points[0, :])
+    #
+    # pc_dir = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed/00/000000.ply"
+    # from plyfile import PlyData
+    # with open(pc_dir, 'rb') as f:
+    #     plydata = PlyData.read(f)
+    #     num_verts = plydata['vertex'].count
+    #     vertices = np.zeros(shape=[num_verts, 4], dtype=np.float32)
+    #     vertices[:,0] = plydata['vertex'].data['x']
+    #     vertices[:,1] = plydata['vertex'].data['y']
+    #     vertices[:,2] = plydata['vertex'].data['z']
+    #     vertices[:, 3] = plydata['vertex'].data['label']
+    #
+    # print(vertices[20348, :])
 
     # lbl_f = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/data/labels/dataset/sequences/00/labels/000000.label"
     # lbl = np.fromfile(lbl_f, dtype=np.int32).reshape((-1))
     # lbl2 = lbl & 0xFFFF  # get lower half for semantics
 
-    # length = []
-    # for file in range(50):
-    #     pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
-    #     points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
-    #     length.append(points.shape[0])
-    #
-    # print(length)
+    # for sequence in range(11):
+    #     length = []
+    #     for file in range(50, 100):
+    #         pc_dir = "%s/%s/velodyne/dataset/sequences/%02d/velodyne/%06d.bin" % (data_folder, data_raw, sequence, file)
+    #         points = np.fromfile(pc_dir, dtype=np.float32).reshape([-1, 4])
+    #         length.append(points.shape[0])
+    #     print(max(length))
 
     # with open("semantic-kitti.json") as json_file:
     #     labels_names = json.load(json_file)["labels"]

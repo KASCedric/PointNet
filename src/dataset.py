@@ -3,6 +3,7 @@ from torch.utils import data
 from torch.utils.data.dataset import Dataset
 import os
 import numpy as np
+from plyfile import PlyData
 
 # TODO: script to list in dataset.csv all data available
 # TODO: script to split dataset.csv into train dev and test sets
@@ -14,7 +15,7 @@ import numpy as np
 from src.utils import true_label
 
 
-class MyCustomDataset(Dataset):
+class MyCustomDatasetV2(Dataset):
     def __init__(self):
         super(MyCustomDataset, self).__init__()
         self.data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne"
@@ -47,11 +48,45 @@ class MyCustomDataset(Dataset):
         return output
 
 
+class MyCustomDataset(Dataset):
+    def __init__(self, train=True):
+        super(MyCustomDataset, self).__init__()
+        self.data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne"
+        self.data_processed = "processed"
+        self.sequence = 0
+
+        self.root_dir = f"{self.data_folder}/{self.data_processed}/{self.sequence:02}"
+        if train:
+            self.count = len([name for name in os.listdir(self.root_dir) if os.path.isfile(self.root_dir + "/" + name)])
+        else:
+            self.count = 2
+
+    def __getitem__(self, index):
+        points_dir = f"{self.root_dir}/{index:06}.ply"
+
+        with open(points_dir, 'rb') as f:
+            plydata = PlyData.read(f)
+            num_verts = plydata['vertex'].count
+            points = np.zeros(shape=[num_verts, 3], dtype=np.float32)
+            points[:, 0] = plydata['vertex'].data['x']
+            points[:, 1] = plydata['vertex'].data['y']
+            points[:, 2] = plydata['vertex'].data['z']
+            labels = plydata['vertex'].data['label'].reshape((-1))
+
+        points = torch.from_numpy(points.T).float()
+        labels = torch.from_numpy(true_label(labels))
+        return points, labels
+
+    def __len__(self):
+        return self.count
+
+
 def dataloader():
 
     train = data.DataLoader(dataset=MyCustomDataset(), batch_size=1, shuffle=True)
+    dev = data.DataLoader(dataset=MyCustomDataset(train=False), batch_size=1, shuffle=True)
 
-    return train, train, train
+    return train, dev, dev
 
 # def dataloader(task, n_classes, batch_size, path_to_data=None):
 #
