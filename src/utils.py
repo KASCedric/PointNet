@@ -108,6 +108,10 @@ if __name__ == "__main__":
     data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne"
     data_raw = "data"
     sequence = 4
+    pts = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/data/velodyne/dataset/sequences/00/velodyne/000000.bin"
+    lbls = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/data/labels/dataset/sequences/00/labels/000000.label"
+
+    bin_to_ply(pts, lbls, "test.ply")
 
     # print(true_label([0, 11]))
 
