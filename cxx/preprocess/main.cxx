@@ -86,7 +86,7 @@ int main(int argc, char** argv){
         if (vm.count("sequence")) {
             sequence = vm["sequence"].as<int>();
         } else {
-            std::cerr << "sequence value was not set.\n";
+            std::cerr << "Sequence value was not set.\n";
             return 1;
         }
 

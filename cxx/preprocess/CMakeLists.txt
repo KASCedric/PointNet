@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 project(preprocess CXX)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -9,8 +9,6 @@ find_package(OpenMP REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
-
-#add_subdirectory (utils)
 
 add_executable(${PROJECT_NAME} main.cxx json.hpp)
 
