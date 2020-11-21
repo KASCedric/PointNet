@@ -25,6 +25,7 @@ def train(n_epoch=30,
           model_save_freq=350,
           models_folder=None,
           data_folder=None,
+          sequence=0,
           n_print=5000):
 
     # # Configuration & hyper parameters
@@ -37,6 +38,7 @@ def train(n_epoch=30,
     # validate  # If True we use dev data to validate the model while training
     # models_folder  # Path where we save the model
     # data_folder # Folder containing the training dataset
+    # sequence  # Kitti velodyne sequence used
     # n_print  # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
     # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
 
@@ -53,7 +55,7 @@ def train(n_epoch=30,
     else:
         bn = True
 
-    train_loader, dev_loader, _ = semantic_kitti_dataloader(data_folder)  # Dataloader
+    train_loader, dev_loader, _ = semantic_kitti_dataloader(sequence, data_folder)  # Dataloader
     n_batches = len(train_loader)  # number of batches
     # Actualize the running loss each "print_freq" batch during one epoch.
     print_freq = int(n_batches / n_print) if n_batches >= n_print else 1
@@ -63,6 +65,8 @@ def train(n_epoch=30,
     before_training += "\nTraining PointNet semantic segmentation network. "
     if validate:
         before_training += "Using dev set for validation."
+    else:
+        before_training += "No validation during training."
     before_training += f"\nBatch size: {batch_size}; Number of batches: {n_batches}"
     before_training += f"\nThe model will be saved each {model_save_freq} batch(es) and each 2 epoch(s) " \
                        f"at the following dir: {models_folder}/semseg-model-exx-bxxxx.pth"
@@ -83,7 +87,7 @@ def train(n_epoch=30,
         running_loss = 0.0  # Used to monitor the training loss
 
         # Pretty print
-        progress_bar = tqdm(train_loader, bar_format="\033[30m{l_bar}{bar}{r_bar}\033[0m")
+        progress_bar = tqdm(train_loader, bar_format="\033[39m{l_bar}{bar}{r_bar}\033[0m")
         progress_bar.set_description(f'Epoch: {epoch+1}/{n_epoch} - train')
         progress_bar.set_postfix(train_loss='N/A', val_loss='N/A', accuracy='N/A')
 
@@ -108,7 +112,7 @@ def train(n_epoch=30,
                 model_path = f"{models_folder}/semseg-model-e{epoch+1:02d}-b{batch+1:04d}.pth"
                 save_model(model=net, path=model_path)
                 after_saving = f"\nModel successfully saved at: {model_path}\n"
-                print(f"\033[92m{after_saving}\033[30m")
+                print(f"\033[92m{after_saving}\033[39m")
 
             # print statistics
             running_loss += train_loss.item()
@@ -140,7 +144,7 @@ def train(n_epoch=30,
             model_path = f"{models_folder}/semseg-model-e{epoch+1:02d}-b{n_batches:04d}.pth"
             save_model(model=net, path=model_path)
             after_saving = f"\nModel successfully saved at: {model_path}\n"
-            print(f"\033[92m{after_saving}\033[30m")
+            print(f"\033[92m{after_saving}\033[39m")
 
     after_training = "Finished Training ! \n" \
                      "Next steps: evaluate your model using the command line: \n" \

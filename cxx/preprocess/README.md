@@ -1,25 +1,22 @@
 # C++ code for  <a href="http://www.semantic-kitti.org/" target="_blank">semantic-kitti</a> dataset preprocessing
 
-## Run on Ubuntu 20.04
+## Installation on Ubuntu 20.04
 
-### Dependencies
+#### Requirements
 ```
-sudo apt install cmake
-sudo apt install libpcl-dev
+sudo apt install cmake  # v3.16
+sudo apt install libpcl-dev  # v1.8
 sudo apt-get install libomp-dev
 ```
 
-### Build
+#### Build
 ```
 mkdir build
 cd build
 cmake ..
 make
 ```
-### Usage
-```
-./preprocess --help
-```
+## Usage
 ```
 ./preprocess --sequence=<sequence> --raw_folder=path/to/raw --processed_folder=path/to/processed --semantic_kitti=path/to/semantic/kitti
 ```

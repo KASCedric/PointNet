@@ -1,51 +1,61 @@
 # PointNet
+Own implementation of the [PointNet]() __semantic segmentation__ neurral network, trained on the [semantic-kitti]() dataset.
 
 
-## How to set up (On Ubuntu) ? ##
 
-### Step 1: Update your repositories
-```
-sudo apt-get update
-```
+## Installation on Ubuntu 20.04
 
-### Step 2: Install pip for Python 3
-```
-sudo apt-get install build-essential libssl-dev libffi-dev python-dev
-sudo apt install python3-pip
-```
+#### Requirements
+- Install virtualenv
+    ```
+    sudo apt-get update
+    sudo apt-get install build-essential libssl-dev libffi-dev python-dev
+    sudo apt install python3-pip
+    sudo pip3 install virtualenv 
+    ```
+- Install Requirements
+    ```
+    virtualenv -p python3 venv
+    source venv/bin/activate
+    which python  # Check which python you use
+    python --version  # Check python version
+    pip install -r requirements.txt
+    ```
 
-### Step 3: Use pip to install virtualenv
-```
-sudo pip3 install virtualenv 
-```
+## Usage
 
-### Step 4: Launch your Python 3 virtual environment, here the name of my virtual environment will be venv
-```
-virtualenv -p python3 venv
-```
 
-### Step 5: Activate your new Python 3 environment
-```
-source venv/bin/activate
-```
+### Prediction
 
-### This commands will show you what is going on: the python executable you are using is now located inside your virtualenv repository
-```
-which python 
-python --version
-```
 
-### Step 6: Install the requirements for the project
+You can download a [pre-trained model]() and [sample point cloud]() as following:
 ```
-pip install -r requirements.txt
+mkdir -p models data
+wget url/to/model models/sample-model.pth
+wget url/to/data data/sample-data.bin
 ```
 
-### Step 7: Do whatever you want:
+And use the following command to predict the labels:
 ```
-...
+python src/inference.py --model=models/sample-model.pth --data=data/sample-data.bin
 ```
 
-### Step 8: done? leave the virtual environment
+### Train
 ```
-deactivate
+python src/train.py --n_epoch=10 --validate=True --models_folder=path/to/models --data_folder=path/to/data --sequence=0
 ```
+Where `path/to/models` is the folder where the trained models are saved.
+`path/to/data` contains the training dataset. Folder `path/to/data/00` correspond to sequence 0, etc.
+
+Use command `python src/train.py --help` to produce help message
+
+Data folder architecture:
+
+![Processed folder architecture](misc/train_data_folder.png)
+
+
+![Training the model](misc/training.png)
+
+### Evaluate
+
+Under construction

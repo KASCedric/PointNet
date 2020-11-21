@@ -37,8 +37,8 @@ class SemanticKittiDataset(Dataset):
         return self.count
 
 
-def semantic_kitti_dataloader(data_folder):
-    dataset = SemanticKittiDataset(sequence=0, data_folder=data_folder)
+def semantic_kitti_dataloader(sequence, data_folder):
+    dataset = SemanticKittiDataset(sequence=sequence, data_folder=data_folder)
 
     n_train, n_test = split(len(dataset), (0.8, 0.2))
     n_dev = 2  # For computing reasons
