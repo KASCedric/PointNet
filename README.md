@@ -1,4 +1,4 @@
-# PointNet
+# PointNet PyTorch
 Own implementation of the [PointNet](https://arxiv.org/abs/1612.00593) __semantic segmentation__ neurral network, trained on the [semantic-kitti](http://www.semantic-kitti.org/) dataset.
 
 
@@ -27,21 +27,21 @@ pip install -r requirements.txt
 ### Prediction
 
 ##### Model
-A pre-trained model is available [here](). Use the following command line to download it.
+A pre-trained model is available [here](https://github.com/KASCedric/PointNetDemo). Use the following command lines to download it.
 ```
 mkdir -p models
-wget url/to/model models/sample-model.pth
+wget https://github.com/KASCedric/PointNetDemo/blob/main/sample-model.pth?raw=true -O models/sample-model.pth
 ```
 ##### Data
-- You can directly download a [downsampled point cloud]() for the inference:
+- You can directly download a [downsampled point cloud](https://github.com/KASCedric/PointNetDemo) for the inference:
     ```
     mkdir -p data
-    wget url/to/downsample data/ds-data.ply
+    wget https://github.com/KASCedric/PointNetDemo/blob/main/ds-data.ply?raw=true -O data/ds-data.ply
     ```
-- Or download a [raw data]() and downsample it so that is has the same distribution as the pointclouds used to train the model:
+- Or download a [raw data](https://github.com/KASCedric/PointNetDemo) and downsample it so that is has the same distribution as the pointclouds used to train the model:
     ```
     mkdir -p data
-    wget url/to/data data/raw-data.bin
+    wget https://github.com/KASCedric/PointNetDemo/blob/main/raw-data.bin?raw=true -O data/raw-data.bin
     cxx/preprocess/build/downsample --input_file=data/raw-data.bin --output_file=data/ds-data.ply
     ```
     Note: Please read the [documentation](https://github.com/KASCedric/PointNet/tree/main/cxx/preprocess) to build the cxx `downsample` executable 
