@@ -1,14 +1,14 @@
 import os
-import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
+import fire
 
-from src.dataloader import semantic_kitti_dataloader
-from src.evaluate import eval_model
-from src.model import PointNetSemSeg, compute_regularization
-from src.utils import save_model
+from dataloader import semantic_kitti_dataloader
+from evaluate import eval_model
+from model import PointNetSemSeg, compute_regularization
+from utils import save_model
 
 # Setting up a random generator seed so that the experiment can be replicated identically on any machine
 torch.manual_seed(29071997)
@@ -16,29 +16,43 @@ torch.manual_seed(29071997)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def train():
+def train(n_epoch=30,
+          batch_size=1,
+          lr=0.001,
+          reg_weight=0.0001,
+          n_classes=34,
+          validate=True,
+          model_save_freq=350,
+          models_folder=None,
+          data_folder=None,
+          n_print=5000):
 
-    with open("configuration.json") as json_file:
-        config = json.load(json_file)["train"]
+    # # Configuration & hyper parameters
+    # n_epoch  # Number of epochs
+    # batch_size  # Batch size
+    # lr  # Learning rate
+    # reg_weight  # Regularization weight
+    # n_classes  # number of classes for the classification
+    # model_save_freq  # Save the model each "model_save_freq" batch(es).
+    # validate  # If True we use dev data to validate the model while training
+    # models_folder  # Path where we save the model
+    # data_folder # Folder containing the training dataset
+    # n_print  # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
+    # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
 
-    # Configuration & hyper parameters
-    n_epoch = config["n_epoch"]  # Number of epochs
-    batch_size = config["batch_size"]  # Batch size
-    lr = config["lr"]  # Learning rate
-    reg_weight = config["reg_weight"]  # Regularization weight
-    n_classes = config["n_classes"]  # number of classes for the classification
-    model_save_freq = config["model_save_freq"]  # Save the model each "model_save_freq" batch(es).
-    validate = config["validate"]  # If True we use dev data to validate the model while training
-    bn = False  # Batch normalization
-    models_folder = config["models_folder"]
-    data_folder = config["data_folder"]
+    if models_folder is None:
+        models_folder = "/home/cedric/Documents/Workspace/ML/PointNet/models"
+    if data_folder is None:
+        data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed"
 
     if not os.path.exists(models_folder):
         os.makedirs(models_folder)
 
-    # Number of times the statistics (losses, accuracy) are updated / printed during one epoch
-    # Note: If n_batches = n_examples / batch_size < n_print then n_print = n_batches
-    n_print = 5000
+    if batch_size == 1:
+        bn = False  # Batch normalization
+    else:
+        bn = True
+
     train_loader, dev_loader, _ = semantic_kitti_dataloader(data_folder)  # Dataloader
     n_batches = len(train_loader)  # number of batches
     # Actualize the running loss each "print_freq" batch during one epoch.
@@ -135,4 +149,4 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    fire.Fire(train)

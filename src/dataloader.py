@@ -4,7 +4,7 @@ from torch.utils.data.dataset import Dataset
 import os
 from plyfile import PlyData
 import numpy as np
-from src.utils import split
+from utils import split
 
 
 class SemanticKittiDataset(Dataset):
