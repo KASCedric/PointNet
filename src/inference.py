@@ -1,13 +1,13 @@
 import torch
 import os
 import json
+from plyfile import PlyData
 import numpy as np
 from model import PointNetSemSeg
 from utils import load_model
 
 # Setting the device used for the computations
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def rgb_from_label(color_map, label):
@@ -63,7 +63,8 @@ if __name__ == "__main__":
     bn = False
     semantic_kitti = "semantic-kitti.json"
     path_to_model = "../models/sample-model.pth"
-    path_to_data = "../data/sample-data.bin"
+    # path_to_data = "../data/raw-data.bin"
+    path_to_data = "../data/ds-data.ply"
     path_to_processed = "../processed"
     file_out = f"{path_to_processed}/sample-processed.ply"
 
@@ -76,11 +77,25 @@ if __name__ == "__main__":
     net = PointNetSemSeg(n_classes=n_classes, bn=bn).to(device=device)
     net = load_model(net, path_to_model)
 
-    pts = np.fromfile(path_to_data, dtype=np.float32).reshape([-1, 4])
-    pts = torch.from_numpy(pts[:, :3].T).float().unsqueeze(0).to(device=device)
+    with open(path_to_data, 'rb') as f:
+        ply_data = PlyData.read(f)['vertex'].data
+        pts = np.stack([
+            ply_data['x'],
+            ply_data['y'],
+            ply_data['z']
+        ], axis=1)
+    pts = torch.from_numpy(pts.T).float().unsqueeze(0).to(device=device)
 
     lbl, _ = net(pts)
     lbl = lbl.data.max(1)[1]
+    lbl = lbl.cpu()
+    pts = pts.cpu()
+
+    # pts = np.fromfile(path_to_data, dtype=np.float32).reshape([-1, 4])
+    # pts = torch.from_numpy(pts[:, :3].T).float().unsqueeze(0).to(device=device)
+    #
+    # lbl, _ = net(pts)
+    # lbl = lbl.data.max(1)[1]
 
     r, g, b = rgb_from_label(c_map, lbl)
     bin_to_ply(pts, lbl, r, g, b, file_out)

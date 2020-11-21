@@ -17,6 +17,7 @@ cmake ..
 make
 ```
 ## Usage
+#### Pre-process data for train
 ```
 ./preprocess --sequence=<sequence> --raw_folder=path/to/raw --processed_folder=path/to/processed --semantic_kitti=path/to/semantic/kitti
 ```
@@ -37,3 +38,9 @@ Processed folder architecture:
 
 
 The processed .ply files contain `(x, y, z, label)` data.
+
+#### Downsample one pointcloud
+```
+./downsample ---input_file=~/Documents/Workspace/Dataset/sample-data.bin --output_file=/Documents/Workspace/Dataset/sample-data.ply
+```
+The downsampled .ply files contain `(x, y, z)` data.
