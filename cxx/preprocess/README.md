@@ -1,4 +1,4 @@
-# C++ code for [semantic-kitti](http://www.semantic-kitti.org/) dataset preprocessing
+# C++ code for  <a href="http://www.semantic-kitti.org/" target="_blank">semantic-kitti</a> dataset preprocessing
 
 ## Run on Ubuntu 20.04
 
@@ -26,7 +26,7 @@ make
 Where `<sequence>` is the sequence of the kitti velodyne dataset (0 to 10). 
 `path/to/processed` is an empty folder where the processed data will be saved.
 `path/to/semantic/kitti` is the path to the `root_dir/src/semantic-kitti.json` file used to store the semantic-kitti dataset configuration.
-`path/to/raw` is the folder that contains the raw [semantic-kitti](http://www.semantic-kitti.org/) dataset.
+`path/to/raw` is the folder that contains the raw <a href="http://www.semantic-kitti.org/" target="_blank">semantic-kitti</a> dataset.
 
 Raw folder architecture:
 
