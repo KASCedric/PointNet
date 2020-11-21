@@ -8,11 +8,8 @@ from src.utils import split
 
 
 class SemanticKittiDataset(Dataset):
-    def __init__(self, sequence, data_folder=None):
+    def __init__(self, sequence, data_folder):
         super(SemanticKittiDataset, self).__init__()
-
-        if data_folder is None:
-            data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed"
 
         self.data_folder = data_folder
         self.sequence = sequence
@@ -40,9 +37,13 @@ class SemanticKittiDataset(Dataset):
         return self.count
 
 
-def semantic_kitti_dataloader():
-    dataset = SemanticKittiDataset(sequence=0)
-    n_train, n_dev, n_test = split(len(dataset), (0.8, 0.1, 0.1))
+def semantic_kitti_dataloader(data_folder):
+    dataset = SemanticKittiDataset(sequence=0, data_folder=data_folder)
+
+    n_train, n_test = split(len(dataset), (0.8, 0.2))
+    n_dev = 2  # For computing reasons
+    n_test -= n_dev
+
     train_ds, dev_ds, test_ds = torch.utils.data.random_split(dataset=dataset, lengths=(n_train, n_dev, n_test))
 
     train_loader = data.DataLoader(dataset=train_ds, batch_size=1, shuffle=True)

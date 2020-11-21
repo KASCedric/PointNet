@@ -1,24 +1,23 @@
 {
     "train": {
-        "task": "semseg",
         "n_classes": 34,
         "batch_size": 1,
         "n_epoch": 60,
         "validate": true,
-        "model_save_freq": 2,
-        "models": "models/",
-        "data": "data/kitti",
+        "model_save_freq": 350,
+        "models_folder": "/home/cedric/Documents/Workspace/ML/PointNet/models",
+        "data_folder": "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed",
         "lr": 0.001,
         "reg_weight": 0.0001
     },
     "evaluate": {
-        "task": "semseg",
-        "model": "models/semseg-model-00001.pth",
-        "data": "data/kitti"
+        "models_folder": "/home/cedric/Documents/Workspace/ML/PointNet/models",
+        "model": "semseg-model-exx-bxxxx.pth",
+        "data_folder": "data/kitti"
     },
     "inference": {
-        "task": "cls",
-        "model": "models/cls-model-000010.pth",
+        "models_folder": "/home/cedric/Documents/Workspace/ML/PointNet/models",
+        "model": "semseg-model-exx-bxxxx.pth",
         "data": "data/kitti/000000.ply"
     }
 }
