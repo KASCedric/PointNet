@@ -179,7 +179,7 @@ void save_ply(const pcl::PointCloud<pcl::PointXYZL>::Ptr& points,
 
 pcl::PointCloud<pcl::PointXYZL>::Ptr down_sample(const pcl::PointCloud<pcl::PointXYZL>::Ptr& input_points){
     float leaf_size = 0.1f;
-    pcl::PointCloud<pcl::PointXYZL>::Ptr output_points(new pcl::PointCloud<pcl::PointXYZL>);;
+    pcl::PointCloud<pcl::PointXYZL>::Ptr output_points(new pcl::PointCloud<pcl::PointXYZL>);
     pcl::VoxelGrid<pcl::PointXYZL> sor;
     sor.setInputCloud (input_points);
     sor.setLeafSize (leaf_size, leaf_size, leaf_size);
@@ -211,7 +211,7 @@ void process(std::string raw_folder,
     omp_set_num_threads(THREAD_NUM);
     #pragma omp parallel for \
         default(none) \
-        shared(dirs, labels_raw_folder, processed_folder, sequence, std::cout, semantic_kitti, semantic_kitti_json)
+        shared(dirs, labels_raw_folder, processed_folder, sequence, semantic_kitti_json)
     for(std::size_t i=0; i<dirs.size(); ++i){
 
         std::string filename = dirs[i].path().stem().string();

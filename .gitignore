@@ -128,13 +128,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Virtual environment
-*venv*
-
-# Pycharm
+#Others
+venv
 *.idea
-
-# others
-*models*
-*data*
+models
+runs
+data
 cmake-build-debug

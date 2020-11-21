@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 
-from src.dataloader import semantic_kitti_dataloader
+from src.dataset import dataloader
 from src.model import PointNetCls, PointNetSemSeg, compute_regularization
 from src.utils import white, blue, green, save_model, red
 
@@ -35,7 +35,7 @@ def train(bn=True):
     n_print = 5000
 
     # Dataloader
-    train_loader, dev_loader, _ = semantic_kitti_dataloader()
+    train_loader, dev_loader, _ = dataloader()
     if validate:
         assert dev_loader is not None, "The dev loader should not be None if you want to validate the model"
 

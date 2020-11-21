@@ -1,0 +1,24 @@
+{
+    "train": {
+        "task": "semseg",
+        "n_classes": 34,
+        "batch_size": 1,
+        "n_epoch": 60,
+        "validate": true,
+        "model_save_freq": 2,
+        "models": "models/",
+        "data": "data/kitti",
+        "lr": 0.001,
+        "reg_weight": 0.0001
+    },
+    "evaluate": {
+        "task": "semseg",
+        "model": "models/semseg-model-00001.pth",
+        "data": "data/kitti"
+    },
+    "inference": {
+        "task": "cls",
+        "model": "models/cls-model-000010.pth",
+        "data": "data/kitti/000000.ply"
+    }
+}
