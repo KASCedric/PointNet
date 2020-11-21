@@ -132,6 +132,6 @@ dmypy.json
 venv
 *.idea
 models
-runs
 data
+processed
 cmake-build-debug

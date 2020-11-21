@@ -1,5 +1,5 @@
 # PointNet
-Own implementation of the [PointNet]() __semantic segmentation__ neurral network, trained on the [semantic-kitti]() dataset.
+Own implementation of the [PointNet](https://arxiv.org/abs/1612.00593) __semantic segmentation__ neurral network, trained on the [semantic-kitti](http://www.semantic-kitti.org/) dataset.
 
 
 
