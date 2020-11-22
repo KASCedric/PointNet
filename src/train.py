@@ -18,6 +18,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train(n_epoch=30,
           batch_size=1,
+          bn=False,
           lr=0.001,
           reg_weight=0.0001,
           n_classes=34,
@@ -31,6 +32,7 @@ def train(n_epoch=30,
     # # Configuration & hyper parameters
     # n_epoch  # Number of epochs
     # batch_size  # Batch size
+    # bn  # Batch normalization
     # lr  # Learning rate
     # reg_weight  # Regularization weight
     # n_classes  # number of classes for the classification
@@ -52,8 +54,6 @@ def train(n_epoch=30,
 
     if batch_size == 1:
         bn = False  # Batch normalization
-    else:
-        bn = True
 
     train_loader, dev_loader, _ = semantic_kitti_dataloader(sequence, data_folder)  # Dataloader
     n_batches = len(train_loader)  # number of batches
@@ -111,8 +111,8 @@ def train(n_epoch=30,
             if batch % model_save_freq == model_save_freq - 1:
                 model_path = f"{models_folder}/semseg-model-e{epoch+1:02d}-b{batch+1:04d}.pth"
                 save_model(model=net, path=model_path)
-                after_saving = f"\nModel successfully saved at: {model_path}\n"
-                print(f"\033[92m{after_saving}\033[39m")
+                # after_saving = f"\nModel successfully saved at: {model_path}\n"
+                # print(f"\033[92m{after_saving}\033[39m")
 
             # print statistics
             running_loss += train_loss.item()
@@ -124,7 +124,7 @@ def train(n_epoch=30,
                     # We update the metrics (validation_loss, accuracy)
                     progress_bar.set_postfix(train_loss=f'{running_loss:.2f}',
                                              val_loss=f"{val_loss:.2f}",
-                                             accuracy=f"{accuracy:.2f}")
+                                             accuracy=f"{accuracy:.2f}%")
                     # print(f"[Epoch: {epoch+1}/{n_epoch}, Batch: {batch+1}/{n_batches}] \
                     #       train loss: {running_loss:.2f} - val loss: {val_loss:.2f} - acc: {accuracy:.2f}")
                     net.train()

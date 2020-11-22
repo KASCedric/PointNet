@@ -50,7 +50,7 @@ wget https://github.com/KASCedric/PointNetDemo/blob/main/sample-model.pth?raw=tr
 
 Use the following command to predict the labels:
 ```
-python src/inference.py --model=models/sample-model.pth --data=data/ds-data.bin
+python src/inference.py --model="models/sample-model.pth" --input_file="data/ds-data.ply" --output_file="processed/ds-data.ply"
 ```
 
 ### Train
@@ -60,7 +60,6 @@ python src/train.py --n_epoch=10 --validate=True --models_folder=path/to/models 
 Where `path/to/models` is the folder where the trained models are saved.
 `path/to/data` contains the training dataset. Folder `path/to/data/00` correspond to sequence 0, etc.
 
-Use command `python src/train.py --help` to produce help message
 
 Data folder architecture:
 
