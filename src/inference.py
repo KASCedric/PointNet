@@ -53,6 +53,8 @@ def predict(model, input_file, output_file, n_classes=34, bn=False):
     labels, _ = net(pts_)
     del pts_
     labels = labels.data.max(1)[1]
+    if labels.is_cuda:
+        labels = labels.cpu()
     labels = np.array(labels, dtype=int).reshape((-1, 1))
 
     red, green, blue = rgb_from_label(c_map, labels)

@@ -55,7 +55,7 @@ python src/inference.py --model="models/sample-model.pth" --input_file="data/ds-
 
 ### Train
 ```
-python src/train.py --n_epoch=10 --validate=True --models_folder=path/to/models --data_folder=path/to/data --sequence=0
+python src/train.py --n_epoch=30 --validate=True --models_folder=path/to/models --data_folder=path/to/data --sequence=0
 ```
 Where `path/to/models` is the folder where the trained models are saved.
 `path/to/data` contains the training dataset. Folder `path/to/data/00` correspond to sequence 0, etc.
@@ -70,4 +70,9 @@ Data folder architecture:
 
 ### Evaluate
 
-Under construction
+```
+python src/evaluate.py --model=path/to/model --data_folder=path/to/data --sequence=0
+```
+The command above will evaluate the model on the test set, and will print the accuracy of the model. 
+The confusion matrix and the classes distribution of the dataset are saved in the `eval` subdirectory located at the parent 
+directory of the model

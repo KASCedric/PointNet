@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
+import itertools
 
 
 def save_model(model, path):
@@ -65,3 +67,46 @@ def save_ply(points, labels, red, green, blue, output_file):
     with open(output_file, 'wb') as fp:
         fp.write(bytes(header.encode()))
         fp.write(vertex.tobytes())
+
+
+# function from https://deeplizard.com/learn/video/0LhiS6yu2qQ and https://github.com/nikitakaraevv/pointnet
+def save_eval(accuracy, confusion_matrix_file, summary_file, confusion_matrix, classes):
+    cmap = plt.get_cmap("Blues")
+    confusion_matrix = np.array(confusion_matrix)
+    numerator = confusion_matrix.astype('float')
+    counts = confusion_matrix.sum(axis=1)
+    denominator = counts[:, np.newaxis]
+    confusion_matrix = np.divide(numerator, denominator, out=np.zeros_like(numerator), where=denominator != 0)
+
+    tick_marks = np.arange(len(classes))
+
+    plt.figure(figsize=(20, 20))
+    title = f'Normalized confusion matrix, Accuracy: {accuracy:.2f}'
+    plt.imshow(confusion_matrix, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+    thresh = confusion_matrix.max() / 2.
+    for i, j in itertools.product(range(confusion_matrix.shape[0]), range(confusion_matrix.shape[1])):
+        plt.text(j, i, f"{confusion_matrix[i, j]:.2f}",
+                 horizontalalignment="center",
+                 color="white" if confusion_matrix[i, j] > thresh else "black")
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+    plt.savefig(confusion_matrix_file)
+    print(f"Confusion matrix saved at: {confusion_matrix_file}")
+
+    plt.figure(figsize=(20, 8))
+    title = f'Normalized distribution of points per classe. Number of points: {sum(counts):.0f}'
+    plt.title(title)
+    plt.bar(classes, 100*counts/sum(counts))
+    for i, v in enumerate(counts):
+        plt.text(i, 100*v/sum(counts)+.1, f"{v:.0f}", color='black',
+                 horizontalalignment="center")
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.ylabel('Percentage (%)')
+    plt.xlabel('Classes')
+    plt.tight_layout()
+    plt.savefig(summary_file)
+    print(f"Summary saved at: {summary_file}")
