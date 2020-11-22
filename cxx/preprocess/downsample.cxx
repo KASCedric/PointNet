@@ -10,7 +10,8 @@
 #include <pcl/point_types.h>
 #include <pcl/search/organized.h>
 #include <pcl/search/octree.h>
-#include <pcl/io/ply_io.h>
+//#include <pcl/io/ply_io.h>
+#include "pcl/io/ply_io.h"
 #include <pcl/filters/voxel_grid.h>
 
 // Namespaces
@@ -19,19 +20,21 @@ namespace po = boost::program_options;
 // Prototypes
 pcl::PointCloud<pcl::PointXYZ>::Ptr down_sample(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_points);
 void save_ply(const pcl::PointCloud<pcl::PointXYZ>::Ptr& points, std::string output_file);
-pcl::PointCloud<pcl::PointXYZ>::Ptr readPointCloud(std::string points_file);
+pcl::PointCloud<pcl::PointXYZ>::Ptr readPointCloud(std::string points_file, const std::string& input_type);
 
 
 int main(int argc, char** argv){
 
     try {
         std::string input_file;
+        std::string input_type;
         std::string output_file;
 
         po::options_description desc("Allowed options");
         desc.add_options()
                 ("help", "produce help message")
-                ("input_file", po::value<std::string>(), "Input file (.bin)")
+                ("input_file", po::value<std::string>(), "Input file (.bin or ply)")
+                ("input_type", po::value<std::string>(), "Input type (bin or ply)")
                 ("output_file", po::value<std::string>(), "Output file (.ply)");
 
         po::variables_map vm;
@@ -50,6 +53,13 @@ int main(int argc, char** argv){
             return 1;
         }
 
+        if (vm.count("input_type")) {
+            input_type = vm["input_type"].as<std::string>();
+        } else {
+            std::cerr << "Argument required.\n";
+            return 1;
+        }
+
         if (vm.count("output_file")) {
             output_file = vm["output_file"].as<std::string>();
         } else {
@@ -61,7 +71,7 @@ int main(int argc, char** argv){
                 << "Output file: " << output_file << std::endl
                 << "Downsampling the pointcloud ..." << std::endl;
 
-        pcl::PointCloud<pcl::PointXYZ>::Ptr points = readPointCloud(input_file);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr points = readPointCloud(input_file, input_type);
         pcl::PointCloud<pcl::PointXYZ>::Ptr points_ds = down_sample(points);
         save_ply(points_ds, output_file);
 
@@ -101,36 +111,47 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr down_sample(const pcl::PointCloud<pcl::Point
 }
 
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr readPointCloud(std::string points_file){
+pcl::PointCloud<pcl::PointXYZ>::Ptr readPointCloud(std::string points_file, const std::string& input_type){
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr points (new pcl::PointCloud<pcl::PointXYZ>);
 
-    // allocate 4 MB buffer (only ~130*4*4 KB are needed)
-    int32_t points_num = 1000000;
-    auto *points_data = (float*)malloc(points_num*sizeof(float));
-
-    // pointers
-    float *px = points_data+0;
-    float *py = points_data+1;
-    float *pz = points_data+2;
-
-    // load point cloud
-    FILE *points_stream;
-    char *points_filename = &points_file[0];
-    points_stream = fopen (points_filename,"rb");
-    points_num = fread(points_data,sizeof(float),points_num,points_stream)/4;
-
-    for (int32_t i=0; i<points_num; i++) {
-        pcl::PointXYZ point;
-
-        point.x = *px;
-        point.y = *py;
-        point.z = *pz;
-
-        points->push_back(point);
-        px+=4; py+=4; pz+=4;
+    if (input_type == "ply"){
+        std::cout << "Using ply reader ..." << std::endl;
+        pcl::io::loadPLYFile(points_file, *points);
     }
-    fclose(points_stream);
+    else if(input_type == "bin"){
+        std::cout << "Using bin reader ..." << std::endl;
+        // allocate 4 MB buffer (only ~130*4*4 KB are needed)
+        int32_t points_num = 1000000;
+        auto *points_data = (float*)malloc(points_num*sizeof(float));
+
+        // pointers
+        float *px = points_data+0;
+        float *py = points_data+1;
+        float *pz = points_data+2;
+
+        // load point cloud
+        FILE *points_stream;
+        char *points_filename = &points_file[0];
+        points_stream = fopen (points_filename,"rb");
+        points_num = fread(points_data,sizeof(float),points_num,points_stream)/4;
+
+        for (int32_t i=0; i<points_num; i++) {
+            pcl::PointXYZ point;
+
+            point.x = *px;
+            point.y = *py;
+            point.z = *pz;
+
+            points->push_back(point);
+            px+=4; py+=4; pz+=4;
+        }
+        fclose(points_stream);
+    }
+    else{
+        std::cout << "Reading  the defined input is not implemented" << std::endl;
+        return nullptr;
+    }
 
     return points;
 }

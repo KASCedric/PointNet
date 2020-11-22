@@ -52,6 +52,9 @@ Use the following command to predict the labels:
 ```
 python src/inference.py --model="models/sample-model.pth" --input_file="data/ds-data.ply" --output_file="processed/ds-data.ply"
 ```
+A pointcloud before and after prediction:
+
+![Prediction](misc/prediction.png)
 
 ### Train
 ```
@@ -76,3 +79,9 @@ python src/evaluate.py --model=path/to/model --data_folder=path/to/data --sequen
 The command above will evaluate the model on the test set, and will print the accuracy of the model. 
 The confusion matrix and the classes distribution of the dataset are saved in the `eval` subdirectory located at the parent 
 directory of the model
+
+Confusion matrix:
+![Confusion matrix](misc/matrix.png)
+
+Test set classes distribution:
+![Classes distribution](misc/summary.png)

@@ -41,6 +41,6 @@ The processed .ply files contain `(x, y, z, label)` data.
 
 #### Downsample one pointcloud
 ```
-./downsample ---input_file=~/Documents/Workspace/Dataset/sample-data.bin --output_file=/Documents/Workspace/Dataset/sample-data.ply
+./downsample ---input_file=~/Documents/Workspace/Dataset/sample-data.bin --input_type=ply --output_file=/Documents/Workspace/Dataset/sample-data.ply
 ```
 The downsampled .ply files contain `(x, y, z)` data.
