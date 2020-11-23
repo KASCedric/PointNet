@@ -38,7 +38,7 @@ wget https://github.com/KASCedric/PointNetDemo/blob/main/sample-model.pth?raw=tr
     mkdir -p data
     wget https://github.com/KASCedric/PointNetDemo/blob/main/ds-data.ply?raw=true -O data/ds-data.ply
     ```
-- Or download a [raw data](https://github.com/KASCedric/PointNetDemo) and downsample it so that is has the same distribution as the pointclouds used to train the model:
+- Or download a [raw data](https://github.com/KASCedric/PointNetDemo) and downsample it so that it has the same distribution as the pointclouds used to train the model:
     ```
     mkdir -p data
     wget https://github.com/KASCedric/PointNetDemo/blob/main/raw-data.bin?raw=true -O data/raw-data.bin
@@ -52,9 +52,6 @@ Use the following command to predict the labels:
 ```
 python src/inference.py --model="models/sample-model.pth" --input_file="data/ds-data.ply" --output_file="processed/ds-data.ply"
 ```
-A pointcloud before and after prediction:
-
-![Prediction](misc/prediction.png)
 
 ### Train
 ```
@@ -85,3 +82,6 @@ Confusion matrix:
 
 Test set classes distribution:
 ![Classes distribution](misc/summary.png)
+
+Pointcloud 004540 (sequence 00) of semantic-kitti dataset before and after prediction:
+![Prediction](misc/prediction.png)
