@@ -13,7 +13,7 @@ from utils import load_model, rgb_from_label, save_ply
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def predict(model, input_file, output_file, n_classes=34, bn=False):
+def predict(model, input_file, output_file, n_classes=34, bn=False, normalize=False):
     print(f"Input file: {input_file}\n"
           f"Output file: {output_file}\n"
           f"Model: {model}\n"
@@ -48,6 +48,16 @@ def predict(model, input_file, output_file, n_classes=34, bn=False):
         print("Unknown input type")
         return 1
 
+    if normalize:
+        mx, my, mz = (-1.2450,  4.4357, -0.9068)  # empirical mean
+        sx, sy, sz = (15.3369,  7.8513,  0.9383)   # empirical std
+        points[:, 0] = (points[:, 0] - points[:, 0].mean())/points[:, 0].std()
+        points[:, 1] = (points[:, 1] - points[:, 1].mean()) / points[:, 1].std()
+        points[:, 2] = (points[:, 2] - points[:, 2].mean()) / points[:, 2].std()
+        points[:, 0] = points[:, 0] * sx + mx
+        points[:, 1] = points[:, 1] * sy + my
+        points[:, 2] = points[:, 2] * sz + mz
+
     # Prediction using cuda if available
     pts_ = torch.from_numpy(points.T).float().unsqueeze(0).to(device=device)
     labels, _ = net(pts_)
@@ -66,3 +76,12 @@ def predict(model, input_file, output_file, n_classes=34, bn=False):
 
 if __name__ == "__main__":
     fire.Fire(predict)
+
+    # from dataloader import semantic_kitti_dataloader
+    # torch.manual_seed(29071997)
+    # data_folder = "/media/cedric/Data/Documents/Datasets/kitti_velodyne/processed"
+    # _, _, test_loader = semantic_kitti_dataloader(0, data_folder)  # Dataloader
+    # inputs, _ = next(iter(test_loader))
+    # inputs = np.array(inputs)
+    # mx, my, mz = inputs.mean(2)[0]  # [-1.2450,  4.4357, -0.9068]
+    # sx, sy, sz = inputs.std(2)[0]  # [15.3369,  7.8513,  0.9383]
